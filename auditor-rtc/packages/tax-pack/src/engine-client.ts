@@ -119,6 +119,12 @@ export class EngineClient {
     };
   }
 
+  /** Descrição oficial de um código de erro da observabilidade (ex.: REG-011). */
+  async descreverErro(codigo: string): Promise<{ codigo: string; titulo: string; descricao: string }> {
+    if (!/^(REG|CAL)-\d{3}$/.test(codigo)) throw new Error("código de erro inválido");
+    return this.getJson(`/observabilidade/erros?${qs({ codigo })}`);
+  }
+
   private async getJson<T>(path: string): Promise<T> {
     const res = await this.request(path);
     if (!res.ok) throw new EngineUnavailableError(`motor respondeu HTTP ${res.status} em ${path.split("?")[0]}`);

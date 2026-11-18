@@ -38,6 +38,10 @@ describe.runIf(!!ENGINE_URL)("EngineClient (motor real)", () => {
     expect(r.estadoItem).toBe("CALCULO_SIMULADO");
   });
 
+  it("descreverErro returns the official title", async () => {
+    expect(await engine.descreverErro("REG-011")).toMatchObject({ codigo: "REG-011", titulo: "NCM não vinculada" });
+  });
+
   it("calcularItem reports REG-011 for meat under 200035", async () => {
     const r = await engine.calcularItem({ ncm: "02013000", cst: "200", cClassTrib: "200035", baseCalculo: 100 }, DATA, 4314902, "RS");
     expect(r.estadoItem).toBe("INCONSISTENCIA_ENTRADA");
