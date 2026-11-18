@@ -1,0 +1,26 @@
+{
+  "versao": "venda-interna-v1",
+  "descricao": "Venda interna de mercadoria por contribuinte do regime regular (CRT 3), NF-e/NFC-e. Só tratamentos determinados pelo próprio produto.",
+  "revisadoPor": null,
+  "aviso": "Lista técnica provisória. Precisa ser revisada e assinada por contador antes de uso em produção.",
+  "permitidos": [
+    { "codigo": "000001", "motivo": "Tributação integral (regra geral)" },
+    { "codigo": "200003", "motivo": "Alimentação humana — cesta básica (Anexo I)" },
+    { "codigo": "200004", "motivo": "Dispositivos médicos (Anexo XII)" },
+    { "codigo": "200007", "motivo": "Dispositivos de acessibilidade (Anexo XIII)" },
+    { "codigo": "200009", "motivo": "Medicamentos registrados na Anvisa" },
+    { "codigo": "200013", "motivo": "Tampões e absorventes higiênicos" },
+    { "codigo": "200014", "motivo": "Hortícolas, frutas e ovos (Anexo XV)" },
+    { "codigo": "200030", "motivo": "Dispositivos médicos (Anexo IV)" },
+    { "codigo": "200031", "motivo": "Dispositivos de acessibilidade (Anexo V)" },
+    { "codigo": "200032", "motivo": "Medicamentos (redução geral)" },
+    { "codigo": "200033", "motivo": "Nutrição enteral e parenteral (Anexo VI)" },
+    { "codigo": "200034", "motivo": "Alimentos para consumo humano (Anexo VII)" },
+    { "codigo": "200035", "motivo": "Higiene pessoal e limpeza (Anexo VIII)" },
+    { "codigo": "200036", "motivo": "Produtos agropecuários in natura" },
+    { "codigo": "200038", "motivo": "Insumos agropecuários e aquícolas (Anexo IX)" },
+    { "codigo": "200053", "motivo": "Soros e vacinas" },
+    { "codigo": "410008", "motivo": "Livros, jornais, periódicos e papel para impressão (imunidade)" },
+    { "codigo": "410009", "motivo": "Fonogramas e videofonogramas musicais nacionais (imunidade)" }
+  ]
+}
