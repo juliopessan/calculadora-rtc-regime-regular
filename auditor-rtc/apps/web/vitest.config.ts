@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 export default defineConfig({
+  esbuild: { jsx: "automatic" },
   resolve: { alias: { "@": fileURLToPath(new URL("./", import.meta.url)) } },
   test: { environment: "node", env: { SESSION_SECRET: "test-secret-com-pelo-menos-32-caracteres!!" } },
 });

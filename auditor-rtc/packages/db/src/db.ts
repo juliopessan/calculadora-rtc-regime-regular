@@ -13,6 +13,8 @@ export type Db = {
   withSystem<T>(fn: (c: Client) => Promise<T>): Promise<T>;
   criarEscritorioComSocio(i: { escritorio: string; nome: string; email: string; senhaHash: string }): Promise<{ escritorioId: string; usuarioId: string }>;
   buscarUsuarioPorEmail(email: string): Promise<UsuarioAuth | null>;
+  /** Resolve token público → escritório/lote, só para lotes concluídos. */
+  resolverTokenRelatorio(token: string): Promise<{ escritorioId: string; loteId: string } | null>;
   close(): Promise<void>;
 };
 
@@ -66,6 +68,12 @@ export function createDb(opts: { appUrl: string; workerUrl?: string }): Db {
       const r = await app.query("SELECT * FROM auth_buscar_usuario($1)", [email]);
       const u = r.rows[0];
       return u ? { id: u.id, escritorioId: u.escritorio_id, senhaHash: u.senha_hash, nome: u.nome, papel: u.papel } : null;
+    },
+    async resolverTokenRelatorio(token) {
+      if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
+      const r = await app.query("SELECT * FROM relatorio_por_token($1)", [token]);
+      const row = r.rows[0];
+      return row ? { escritorioId: row.escritorio_id, loteId: row.lote_id } : null;
     },
     async close() {
       await app.end();

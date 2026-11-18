@@ -261,3 +261,9 @@ export async function listarUsuarios(c: Client): Promise<{ id: string; nome: str
   const r = await c.query("SELECT id, nome, email, papel FROM usuarios ORDER BY nome");
   return r.rows;
 }
+
+export async function nomeUsuario(c: Client, id: string | null): Promise<string | null> {
+  if (!id || !isUuid(id)) return null;
+  const r = await c.query<{ nome: string }>("SELECT nome FROM usuarios WHERE id = $1", [id]);
+  return r.rows[0]?.nome ?? null;
+}
