@@ -1,0 +1,10 @@
+{
+  "name": "@auditor/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./test-helpers": "./test/helpers.ts" },
+  "scripts": { "test": "vitest run", "migrate": "node --experimental-strip-types src/cli-migrate.ts" },
+  "dependencies": { "pg": "^8.13.1" },
+  "devDependencies": { "@types/pg": "^8.11.10" }
+}
