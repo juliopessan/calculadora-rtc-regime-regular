@@ -1,0 +1,8 @@
+Este produto executa, sem modificações nas regras de cálculo, a Calculadora de Tributos
+(regime regular) publicada como software livre sob a licença MIT:
+
+  MIT License — Copyright (c) 2026 Receita Federal do Brasil
+  https://github.com/ReceitaFederal/calculadora-rtc-regime-regular
+
+O texto integral da licença está no arquivo LICENSE distribuído junto com o motor.
+O uso do motor não implica endosso da Receita Federal do Brasil a este produto.
