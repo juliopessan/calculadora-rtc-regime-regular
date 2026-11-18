@@ -25,12 +25,12 @@ export class CandidateIndex {
   private readonly dfe: string;
   private readonly concurrency: number;
   private readonly cenario: Cenario;
+  private readonly engine: Engine;
+  private readonly data: string;
 
-  constructor(
-    private readonly engine: Engine,
-    private readonly data: string,
-    opts: { dfe?: string; concurrency?: number; cenario?: Cenario } = {},
-  ) {
+  constructor(engine: Engine, data: string, opts: { dfe?: string; concurrency?: number; cenario?: Cenario } = {}) {
+    this.engine = engine;
+    this.data = data;
     this.dfe = opts.dfe ?? "NF-e";
     this.concurrency = opts.concurrency ?? 16;
     this.cenario = opts.cenario ?? CENARIO_VENDA_INTERNA_V1;

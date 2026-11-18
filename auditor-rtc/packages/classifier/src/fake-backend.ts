@@ -6,7 +6,10 @@ import type { ClassifyInput, Decision, DecisionBackend } from "./types.ts";
  */
 export class FakeBackend implements DecisionBackend {
   name = "fake";
-  constructor(private readonly script: (input: ClassifyInput) => Partial<Decision> = () => ({})) {}
+  private readonly script: (input: ClassifyInput) => Partial<Decision>;
+  constructor(script: (input: ClassifyInput) => Partial<Decision> = () => ({})) {
+    this.script = script;
+  }
 
   async decide(input: ClassifyInput): Promise<Decision> {
     const first = input.candidates[0]?.id ?? "";

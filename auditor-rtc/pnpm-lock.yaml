@@ -18,6 +18,21 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.5)
 
+  apps/worker:
+    dependencies:
+      '@auditor/classifier':
+        specifier: workspace:*
+        version: link:../../packages/classifier
+      '@auditor/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@auditor/pipeline':
+        specifier: workspace:*
+        version: link:../../packages/pipeline
+      '@auditor/tax-pack':
+        specifier: workspace:*
+        version: link:../../packages/tax-pack
+
   packages/classifier: {}
 
   packages/db:
