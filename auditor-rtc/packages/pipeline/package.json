@@ -1,0 +1,14 @@
+{
+  "name": "@auditor/pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": { "test": "vitest run" },
+  "dependencies": {
+    "@auditor/classifier": "workspace:*",
+    "@auditor/tax-pack": "workspace:*",
+    "papaparse": "^5.4.1"
+  },
+  "devDependencies": { "@types/papaparse": "^5.3.15" }
+}
