@@ -23,15 +23,32 @@ export async function exigirSessao(req: Request): Promise<Sessao> {
 export const jsonResp = (status: number, body: unknown, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...headers } });
 
-/** Envolve um handler: RespostaHttp → JSON com o status; outros erros → 500 genérico. */
-export function rota(fn: (req: Request, ctx: { params: Promise<Record<string, string>> }) => Promise<Response>) {
-  return async (req: Request, ctx: { params: Promise<Record<string, string>> } = { params: Promise.resolve({}) }) => {
+type Ctx = { params: Promise<Record<string, string>> };
+
+function tratar(err: unknown): Response {
+  if (err instanceof RespostaHttp) return jsonResp(err.status, { erro: err.message });
+  console.error(err);
+  return jsonResp(500, { erro: "Erro interno" });
+}
+
+/** Rota sem parâmetros: RespostaHttp → JSON com o status; outros erros → 500 genérico. */
+export function rota(fn: (req: Request) => Promise<Response>) {
+  return async (req: Request): Promise<Response> => {
+    try {
+      return await fn(req);
+    } catch (err) {
+      return tratar(err);
+    }
+  };
+}
+
+/** Rota dinâmica (ex.: /api/lotes/[id]). */
+export function rotaComParams(fn: (req: Request, ctx: Ctx) => Promise<Response>) {
+  return async (req: Request, ctx: Ctx): Promise<Response> => {
     try {
       return await fn(req, ctx);
     } catch (err) {
-      if (err instanceof RespostaHttp) return jsonResp(err.status, { erro: err.message });
-      console.error(err);
-      return jsonResp(500, { erro: "Erro interno" });
+      return tratar(err);
     }
   };
 }

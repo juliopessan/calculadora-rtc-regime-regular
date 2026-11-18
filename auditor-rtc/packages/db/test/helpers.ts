@@ -1,6 +1,7 @@
 import pg from "pg";
 import { randomBytes } from "node:crypto";
-import { createDb, migrate, type Db } from "../src/index.ts";
+import { createDb, type Db } from "../src/index.ts";
+import { migrate } from "../src/migrate.ts";
 
 /** Cria um banco novo e migrado no Postgres de testes (scripts/test-db.sh). */
 export async function createTestDb(): Promise<{ db: Db; ownerUrl: string; drop: () => Promise<void> }> {

@@ -240,3 +240,24 @@ export async function obterEscritorio(c: Client): Promise<Escritorio> {
 export async function atualizarMarca(c: Client, m: { nome: string; corPrimaria: string; logoUrl: string | null }): Promise<void> {
   await c.query("UPDATE escritorios SET nome = $1, cor_primaria = $2, logo_url = $3 WHERE id = tenant_atual()", [m.nome, m.corPrimaria, m.logoUrl]);
 }
+
+export async function criarUsuario(
+  c: Client,
+  u: { nome: string; email: string; senhaHash: string; papel: "socio" | "contador_responsavel" | "analista" },
+): Promise<string> {
+  try {
+    const r = await c.query<{ id: string }>(
+      "INSERT INTO usuarios (escritorio_id, email, senha_hash, nome, papel) VALUES (tenant_atual(), lower($1), $2, $3, $4) RETURNING id",
+      [u.email, u.senhaHash, u.nome, u.papel],
+    );
+    return r.rows[0]!.id;
+  } catch (err) {
+    if ((err as { code?: string }).code === "23505") throw new Error("e-mail já cadastrado");
+    throw err;
+  }
+}
+
+export async function listarUsuarios(c: Client): Promise<{ id: string; nome: string; email: string; papel: string }[]> {
+  const r = await c.query("SELECT id, nome, email, papel FROM usuarios ORDER BY nome");
+  return r.rows;
+}
