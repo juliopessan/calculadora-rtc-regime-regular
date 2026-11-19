@@ -1,3 +1,4 @@
+import "../../globals.css";
 import Link from "next/link";
 import { repos } from "@auditor/db";
 import { getDb } from "@/lib/db";

@@ -1,3 +1,4 @@
+import "../../globals.css";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { carregarRelatorio } from "@/lib/relatorio";
