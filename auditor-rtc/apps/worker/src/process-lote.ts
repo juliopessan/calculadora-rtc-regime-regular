@@ -44,13 +44,20 @@ export async function processarLote(db: Db, loteId: string, deps: DepsLote): Pro
 
   let temporarios = 0;
   await forEachLimit(fila, deps.concurrency ?? 8, async (sku) => {
-    const r = await executarSku(
-      { codigo: sku.codigo, descricao: sku.descricao, ncmBruto: sku.ncmBruto, ...(sku.gtin ? { gtin: sku.gtin } : {}) },
-      { index, backend: deps.backend, engine: deps.engine, ctx, politica },
-    );
+    let r: SkuResultado;
+    try {
+      r = await executarSku(
+        { codigo: sku.codigo, descricao: sku.descricao, ncmBruto: sku.ncmBruto, ...(sku.gtin ? { gtin: sku.gtin } : {}) },
+        { index, backend: deps.backend, engine: deps.engine, ctx, politica },
+      );
+    } catch (err) {
+      // Um SKU problemático não pode travar o lote: vai para revisão humana.
+      r = { status: "EM_REVISAO", ncm: null, motivo: `erro inesperado: ${(err as Error).message}`, tentativas: 0 };
+    }
     if (r.status === "ERRO_TEMPORARIO") temporarios++;
     await inTenant(async (c) => {
       await repos.atualizarSku(c, sku.id, patchDe(sku, r));
+      await c.query("UPDATE lotes SET reivindicado_em = now() WHERE id = $1", [loteId]); // renova a concessão
       await repos.registrarEvento(c, {
         loteId,
         skuId: sku.id,
@@ -87,13 +94,21 @@ function patchDe(sku: SkuRow, r: SkuResultado): SkuPatch {
   };
 }
 
-/** Pega o lote NA_FILA mais antigo e o marca PROCESSANDO (seguro com vários workers). */
+/** Concessão: sem renovação por este tempo, um lote PROCESSANDO volta a ser reivindicável. */
+export const CONCESSAO_MINUTOS = 10;
+
+/** Pega o lote NA_FILA mais antigo (ou um PROCESSANDO abandonado) e o marca PROCESSANDO (seguro com vários workers). */
 export async function reivindicarProximoLote(db: Db): Promise<{ loteId: string; escritorioId: string } | null> {
   return db.withSystem(async (c) => {
     const r = await c.query<{ id: string; escritorio_id: string }>(
-      `UPDATE lotes SET status = 'PROCESSANDO'
-       WHERE id = (SELECT id FROM lotes WHERE status = 'NA_FILA' ORDER BY criado_em FOR UPDATE SKIP LOCKED LIMIT 1)
+      `UPDATE lotes SET status = 'PROCESSANDO', reivindicado_em = now()
+       WHERE id = (
+         SELECT id FROM lotes
+         WHERE status = 'NA_FILA'
+            OR (status = 'PROCESSANDO' AND (reivindicado_em IS NULL OR reivindicado_em < now() - make_interval(mins => $1)))
+         ORDER BY criado_em FOR UPDATE SKIP LOCKED LIMIT 1)
        RETURNING id, escritorio_id`,
+      [CONCESSAO_MINUTOS],
     );
     const row = r.rows[0];
     return row ? { loteId: row.id, escritorioId: row.escritorio_id } : null;

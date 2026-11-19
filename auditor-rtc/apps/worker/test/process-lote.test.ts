@@ -95,3 +95,26 @@ describe("reivindicarProximoLote", () => {
     expect((await db.withTenant(esc, (c) => repos.obterLote(c, lote.id)))!.status).toBe("PROCESSANDO");
   });
 });
+
+describe("robustez (revisão final)", () => {
+  it("isolates an unexpected per-SKU error instead of failing the whole lote", async () => {
+    const lote = await db.withTenant(esc, (c) => repos.criarLote(c, { cliente: "Veneno", dataReferencia: "2026-11-18", skus: skus.slice(0, 2) }));
+    const backend = new FakeBackend((input) => ({ choice: input.state.descricao === "Arroz" ? "999999" : "000001" })); // escolha inválida → erro inesperado
+    const r = await processarLote(db, lote.id, { backend, engine: fakeEngine({ down: false }), cenario });
+    expect(r.processados).toBe(2);
+    const out = await db.withTenant(esc, (c) => repos.listarSkus(c, lote.id));
+    expect(out[0]).toMatchObject({ status: "EM_REVISAO" });
+    expect(out[0]!.motivo).toMatch(/erro inesperado/);
+    expect(out[1]!.status).toBe("EM_REVISAO");
+    expect((await db.withTenant(esc, (c) => repos.obterLote(c, lote.id)))!.status).toBe("EM_REVISAO");
+  });
+
+  it("reclaims a lote left PROCESSANDO by a crashed worker after the lease expires", async () => {
+    const lote = await db.withTenant(esc, (c) => repos.criarLote(c, { cliente: "Crash", dataReferencia: "2026-11-18", skus: [] }));
+    while (await reivindicarProximoLote(db)) { /* esvazia a fila */ }
+    await db.withSystem((c) => c.query("UPDATE lotes SET status = 'PROCESSANDO', reivindicado_em = now() - interval '11 minutes' WHERE id = $1", [lote.id]));
+    const again = await reivindicarProximoLote(db);
+    expect(again?.loteId).toBe(lote.id);
+    expect(await reivindicarProximoLote(db)).toBeNull(); // lease renovado: não pega de novo
+  });
+});
