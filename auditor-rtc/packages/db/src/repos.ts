@@ -45,9 +45,13 @@ export type SkuRow = {
   motivo: string | null;
   tentativas: number;
   revisadoPor: string | null;
+  /** Escolha original do modelo, gravada uma vez; base do rótulo da calibração. */
+  escolhaModelo: string | null;
+  confiancaModelo: number | null;
+  backendModelo: string | null;
 };
 
-export type SkuPatch = Partial<Pick<SkuRow, "status" | "ncm" | "cst" | "cClassTrib" | "confianca" | "probabilidades" | "candidatos" | "verificacao" | "motivo" | "tentativas" | "revisadoPor">>;
+export type SkuPatch = Partial<Pick<SkuRow, "status" | "ncm" | "cst" | "cClassTrib" | "confianca" | "probabilidades" | "candidatos" | "verificacao" | "motivo" | "tentativas" | "revisadoPor" | "escolhaModelo" | "confiancaModelo" | "backendModelo">>;
 
 export type Escritorio = { id: string; nome: string; corPrimaria: string; logoUrl: string | null };
 
@@ -96,6 +100,9 @@ function toSku(r: Record<string, any>): SkuRow {
     motivo: r.motivo,
     tentativas: r.tentativas,
     revisadoPor: r.revisado_por,
+    escolhaModelo: r.escolha_modelo,
+    confiancaModelo: r.confianca_modelo === null ? null : Number(r.confianca_modelo),
+    backendModelo: r.backend_modelo,
   };
 }
 
@@ -186,6 +193,7 @@ const COLS: Record<keyof SkuPatch, string> = {
   status: "status", ncm: "ncm", cst: "cst", cClassTrib: "c_class_trib", confianca: "confianca",
   probabilidades: "probabilidades", candidatos: "candidatos", verificacao: "verificacao",
   motivo: "motivo", tentativas: "tentativas", revisadoPor: "revisado_por",
+  escolhaModelo: "escolha_modelo", confiancaModelo: "confianca_modelo", backendModelo: "backend_modelo",
 };
 const JSON_COLS = new Set(["probabilidades", "candidatos", "verificacao"]);
 
@@ -270,4 +278,30 @@ export async function nomeUsuario(c: Client, id: string | null): Promise<string 
   if (!id || !isUuid(id)) return null;
   const r = await c.query<{ nome: string }>("SELECT nome FROM usuarios WHERE id = $1", [id]);
   return r.rows[0]?.nome ?? null;
+}
+
+/** Amostras rotuladas por humano: só SKUs revisados em que um modelo decidiu (auto-certificados não contam). */
+export async function amostrasRotuladas(c: Client): Promise<{ confidence: number; correct: boolean }[]> {
+  const r = await c.query<{ confianca: string; correto: boolean }>(
+    `SELECT confianca_modelo AS confianca, (c_class_trib = escolha_modelo) AS correto
+     FROM skus WHERE status = 'CERTIFICADO_REVISADO' AND escolha_modelo IS NOT NULL AND confianca_modelo IS NOT NULL`,
+  );
+  return r.rows.map((x) => ({ confidence: Number(x.confianca), correct: x.correto }));
+}
+
+export async function limiarEscritorio(c: Client): Promise<number | null> {
+  const r = await c.query<{ threshold: string | null }>("SELECT threshold FROM escritorios WHERE id = tenant_atual()");
+  const t = r.rows[0]?.threshold;
+  return t === null || t === undefined ? null : Number(t);
+}
+
+export async function aplicarLimiar(
+  c: Client,
+  a: { threshold: number | null; amostras: number; precisao: number; cobertura: number; usuarioId: string },
+): Promise<void> {
+  await c.query("UPDATE escritorios SET threshold = $1 WHERE id = tenant_atual()", [a.threshold]);
+  await c.query(
+    "INSERT INTO calibracoes (escritorio_id, amostras, threshold, precisao, cobertura, aplicado_por) VALUES (tenant_atual(), $1, $2, $3, $4, $5)",
+    [a.amostras, a.threshold, a.precisao, a.cobertura, a.usuarioId],
+  );
 }

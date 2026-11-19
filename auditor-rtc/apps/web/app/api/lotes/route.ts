@@ -31,7 +31,8 @@ export const POST = rota(async (req) => {
   if (ingest.skus.length === 0) throw new RespostaHttp(422, "Nenhum SKU válido no arquivo");
 
   const lote = await getDb().withTenant(s.escritorioId, async (c) => {
-    const l = await repos.criarLote(c, { cliente, dataReferencia, skus: ingest.skus, duplicados: ingest.duplicados, regime });
+    const threshold = await repos.limiarEscritorio(c); // lotes novos herdam o limiar calibrado do escritório
+    const l = await repos.criarLote(c, { cliente, dataReferencia, skus: ingest.skus, duplicados: ingest.duplicados, regime, threshold });
     await repos.registrarEvento(c, { loteId: l.id, usuarioId: s.usuarioId, tipo: "lote_criado", dados: { total: l.total, duplicados: ingest.duplicados, errosLinha: ingest.erros.length } });
     return l;
   });

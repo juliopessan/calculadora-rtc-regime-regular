@@ -80,7 +80,10 @@ export async function processarLote(db: Db, loteId: string, deps: DepsLote): Pro
 }
 
 function patchDe(sku: SkuRow, r: SkuResultado): SkuPatch {
+  // A escolha original do modelo é gravada uma única vez: é o rótulo de referência da calibração.
+  const modeloDecidiu = r.decisao && r.decisao.backend !== "deterministico" && sku.escolhaModelo === null;
   return {
+    ...(modeloDecidiu ? { escolhaModelo: r.decisao!.choice, confiancaModelo: r.decisao!.confidence, backendModelo: r.decisao!.backend } : {}),
     status: r.status,
     ncm: r.ncm,
     cst: r.escolhido?.cst ?? null,

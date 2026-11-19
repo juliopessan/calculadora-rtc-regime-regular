@@ -118,3 +118,25 @@ describe("robustez (revisão final)", () => {
     expect(await reivindicarProximoLote(db)).toBeNull(); // lease renovado: não pega de novo
   });
 });
+
+describe("escolha original do modelo (calibração)", () => {
+  it("stores the model choice once and never overwrites it", async () => {
+    const lote = await db.withTenant(esc, (c) => repos.criarLote(c, { cliente: "Calib", dataReferencia: "2026-11-18", skus: skus.slice(0, 1) }));
+    await processarLote(db, lote.id, { backend: new FakeBackend(() => ({ choice: "200003", confidence: 0.97 })), engine: fakeEngine({ down: false }), cenario });
+    let [s] = await db.withTenant(esc, (c) => repos.listarSkus(c, lote.id));
+    expect(s).toMatchObject({ escolhaModelo: "200003", confiancaModelo: 0.97, backendModelo: "fake" });
+
+    await db.withTenant(esc, (c) => repos.atualizarSku(c, s!.id, { status: "NA_FILA" }));
+    await processarLote(db, lote.id, { backend: new FakeBackend(() => ({ choice: "000001", confidence: 0.6 })), engine: fakeEngine({ down: false }), cenario });
+    [s] = await db.withTenant(esc, (c) => repos.listarSkus(c, lote.id));
+    expect(s).toMatchObject({ escolhaModelo: "200003", confiancaModelo: 0.97, cClassTrib: "000001" });
+  });
+
+  it("does not record a choice when no model decided (single candidate)", async () => {
+    const umSo = { versao: "t", revisadoPor: null, permitidos: [{ codigo: "000001", motivo: "" }] };
+    const lote = await db.withTenant(esc, (c) => repos.criarLote(c, { cliente: "Det", dataReferencia: "2026-11-18", skus: skus.slice(0, 1) }));
+    await processarLote(db, lote.id, { backend: new FakeBackend(), engine: fakeEngine({ down: false }), cenario: umSo });
+    const [s] = await db.withTenant(esc, (c) => repos.listarSkus(c, lote.id));
+    expect(s).toMatchObject({ escolhaModelo: null, confiancaModelo: null });
+  });
+});
