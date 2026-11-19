@@ -1,24 +1,28 @@
-import "../../globals.css";
 import Link from "next/link";
 import { FormAuth } from "@/components/form-auth";
+import { PainelAuth } from "@/components/painel-auth";
 
 export default function LoginPage() {
   return (
-    <main className="container" style={{ maxWidth: 420, paddingTop: 64 }}>
-      <div className="card">
-        <h1 style={{ marginTop: 0, fontSize: 24 }}>Entrar</h1>
-        <FormAuth
-          endpoint="/api/auth/login"
-          botao="Entrar"
-          campos={[
-            { nome: "email", rotulo: "E-mail", tipo: "email", autoComplete: "email" },
-            { nome: "senha", rotulo: "Senha", tipo: "password", autoComplete: "current-password" },
-          ]}
-        />
-        <p className="muted" style={{ marginBottom: 0 }}>
-          Ainda não tem conta? <Link href="/cadastro">Cadastre seu escritório</Link>
-        </p>
-      </div>
-    </main>
+    <div className="auth">
+      <main className="auth__form" id="conteudo">
+        <Link className="brand" href="/" aria-label="Auditor RTC, início"><span className="brand__mark">A</span><span className="brand__name">Auditor RTC</span></Link>
+        <div className="auth__box">
+          <div className="stack">
+            <h1 className="display" style={{ fontSize: "clamp(30px,4vw,40px)", letterSpacing: "-.03em" }} tabIndex={-1}>Entrar</h1>
+            <p className="soft">Use o e-mail do escritório.</p>
+          </div>
+          <FormAuth
+            endpoint="/api/auth/login" botao="Entrar" ocupado="Verificando..."
+            campos={[
+              { nome: "email", rotulo: "E-mail", tipo: "email", autoComplete: "email", inputMode: "email" },
+              { nome: "senha", rotulo: "Senha", tipo: "password", autoComplete: "current-password" },
+            ]}
+          />
+          <p className="row" style={{ fontSize: 14 }}><Link className="link" href="/cadastro">Cadastrar meu escritório</Link></p>
+        </div>
+      </main>
+      <PainelAuth />
+    </div>
   );
 }

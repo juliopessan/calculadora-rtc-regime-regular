@@ -4,18 +4,18 @@ import type { DadosRelatorio } from "@/lib/relatorio";
 export function RelatorioView({ dados }: { dados: DadosRelatorio }) {
   const { escritorio: e, lote: l, resumo: r } = dados;
   return (
-    <main className="container relatorio" style={{ ["--brand" as string]: e.corPrimaria, paddingTop: 32, paddingBottom: 48 }}>
-      <header style={{ display: "flex", alignItems: "center", gap: 16, borderBottom: `4px solid ${e.corPrimaria}`, paddingBottom: 16 }}>
-        {e.logoUrl && <img src={e.logoUrl} alt={`Logo ${e.nome}`} style={{ maxHeight: 56, maxWidth: 200 }} />}
+    <main className="rel" style={{ ["--marca" as string]: e.corPrimaria }}>
+      <header className="rel-cab">
+        {e.logoUrl && <img src={e.logoUrl} alt={`Logo ${e.nome}`} />}
         <div>
-          <div style={{ fontWeight: 800, fontSize: 22, color: e.corPrimaria }}>{e.nome}</div>
-          <div className="muted">Revisão de cadastro fiscal para IBS e CBS</div>
+          <div className="rel-nome" style={{ color: e.corPrimaria }}>{e.nome}</div>
+          <div className="rel-suave">Revisão de cadastro fiscal para IBS e CBS</div>
         </div>
       </header>
 
-      <section style={{ marginTop: 24 }}>
-        <h1 style={{ fontSize: 24, margin: "0 0 4px" }}>Cliente: {l.cliente}</h1>
-        <p className="muted" style={{ margin: 0 }}>
+      <section>
+        <h1>Cliente: {l.cliente}</h1>
+        <p className="rel-suave" style={{ margin: 0 }}>
           Data de referência {l.dataReferencia} · Motor de cálculo versão {l.motorVersao ?? "—"}
           {l.assinadoPor && <> · Assinado por {l.assinadoPor}</>}
           {l.concluidoEm && <> em {new Date(l.concluidoEm).toLocaleDateString("pt-BR")}</>}
@@ -25,13 +25,13 @@ export function RelatorioView({ dados }: { dados: DadosRelatorio }) {
         </p>
       </section>
 
-      <h2 style={{ fontSize: 18 }}>Produtos certificados</h2>
-      <div className="rolavel">
-        <table className="tabela">
+      <h2>Produtos certificados</h2>
+      <div className="rel-rolavel">
+        <table className="rel-tabela">
           <thead><tr><th>Código</th><th>Produto</th><th>NCM</th><th>CST</th><th>cClassTrib</th><th>Fundamento</th></tr></thead>
           <tbody>
             {dados.certificados.map((s) => (
-              <tr key={s.codigo}><td>{s.codigo}</td><td>{s.descricao}</td><td>{s.ncm}</td><td>{s.cst}</td><td>{s.cClassTrib}</td><td style={{ fontSize: 12 }}>{s.fundamento}</td></tr>
+              <tr key={s.codigo}><td>{s.codigo}</td><td>{s.descricao}</td><td>{s.ncm}</td><td>{s.cst}</td><td>{s.cClassTrib}</td><td className="rel-fund">{s.fundamento}</td></tr>
             ))}
           </tbody>
         </table>
@@ -39,9 +39,9 @@ export function RelatorioView({ dados }: { dados: DadosRelatorio }) {
 
       {dados.pendentes.length > 0 && (
         <>
-          <h2 style={{ fontSize: 18 }}>Precisamos de informação sobre estes produtos</h2>
-          <div className="rolavel">
-            <table className="tabela">
+          <h2>Precisamos de informação sobre estes produtos</h2>
+          <div className="rel-rolavel">
+            <table className="rel-tabela">
               <thead><tr><th>Código</th><th>Produto</th><th>NCM informado</th><th>O que falta</th></tr></thead>
               <tbody>{dados.pendentes.map((s) => <tr key={s.codigo}><td>{s.codigo}</td><td>{s.descricao}</td><td>{s.ncm}</td><td>{s.motivo}</td></tr>)}</tbody>
             </table>
@@ -49,7 +49,7 @@ export function RelatorioView({ dados }: { dados: DadosRelatorio }) {
         </>
       )}
 
-      <footer className="muted" style={{ marginTop: 32, fontSize: 12, borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+      <footer className="rel-rodape">
         Classificação verificada com o motor de cálculo de código aberto da Receita Federal (licença MIT). O uso do motor
         não implica endosso da Receita Federal do Brasil. A classificação foi aprovada pelo profissional responsável de {e.nome}.
       </footer>

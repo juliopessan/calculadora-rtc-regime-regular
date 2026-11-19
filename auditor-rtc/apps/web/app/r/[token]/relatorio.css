@@ -1,0 +1,23 @@
+/* Relatório white-label: neutro, sem a identidade do produto. Só a cor do escritório (--marca) aparece. */
+.rel { --marca: #1f4e79; --texto: #1d232b; --suave: #5b6776; --linha: #dfe3e8; --fundo: #ffffff;
+  max-width: 1040px; margin: 0 auto; padding: 32px 16px 48px; color: var(--texto); background: var(--fundo);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; }
+body:has(.rel) { margin: 0; background: #f4f5f7; }
+.rel-cab { display: flex; align-items: center; gap: 16px; border-bottom: 4px solid var(--marca); padding-bottom: 16px; }
+.rel-cab img { max-height: 56px; max-width: 200px; }
+.rel-nome { font-weight: 800; font-size: 22px; color: var(--marca); }
+.rel-suave { color: var(--suave); }
+.rel h1 { font-size: 24px; margin: 24px 0 4px; }
+.rel h2 { font-size: 18px; margin: 28px 0 8px; }
+.rel-rolavel { overflow-x: auto; }
+.rel-tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.rel-tabela th, .rel-tabela td { text-align: left; padding: 8px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+.rel-tabela th { color: var(--suave); font-weight: 600; font-size: 13px; }
+.rel-fund { font-size: 12px; color: var(--suave); }
+.rel-rodape { margin-top: 32px; font-size: 12px; color: var(--suave); border-top: 1px solid var(--linha); padding-top: 12px; }
+@media print {
+  body:has(.rel) { background: #fff; }
+  .rel { max-width: none; padding: 0; }
+  .rel-tabela { font-size: 11px; }
+  .rel-tabela tr { break-inside: avoid; }
+}
