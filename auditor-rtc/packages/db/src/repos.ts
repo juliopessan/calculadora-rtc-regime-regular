@@ -305,3 +305,26 @@ export async function aplicarLimiar(
     [a.amostras, a.threshold, a.precisao, a.cobertura, a.usuarioId],
   );
 }
+
+export type ItemRevisaoCenario = { codigo: string; decisao: "concordo" | "discordo"; comentario?: string };
+export type RevisaoCenario = { cenarioVersao: string; itens: ItemRevisaoCenario[]; sugeridos: string[]; discordancias: number; assinadoPor: string; criadoEm: Date };
+
+export async function registrarRevisaoCenario(
+  c: Client,
+  r: { cenarioVersao: string; usuarioId: string; itens: ItemRevisaoCenario[]; sugeridos: string[] },
+): Promise<void> {
+  await c.query(
+    "INSERT INTO revisoes_cenario (escritorio_id, cenario_versao, usuario_id, itens, sugeridos, discordancias) VALUES (tenant_atual(), $1, $2, $3, $4, $5)",
+    [r.cenarioVersao, r.usuarioId, JSON.stringify(r.itens), JSON.stringify(r.sugeridos), r.itens.filter((i) => i.decisao === "discordo").length],
+  );
+}
+
+export async function ultimaRevisaoCenario(c: Client, versao: string): Promise<RevisaoCenario | null> {
+  const r = await c.query(
+    `SELECT r.*, u.nome FROM revisoes_cenario r JOIN usuarios u ON u.id = r.usuario_id
+     WHERE r.cenario_versao = $1 ORDER BY r.id DESC LIMIT 1`,
+    [versao],
+  );
+  const x = r.rows[0];
+  return x ? { cenarioVersao: x.cenario_versao, itens: x.itens, sugeridos: x.sugeridos, discordancias: x.discordancias, assinadoPor: x.nome, criadoEm: x.criado_em } : null;
+}

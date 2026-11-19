@@ -4,10 +4,14 @@ import { getDb } from "@/lib/db";
 import { sessaoOuLogin } from "@/lib/server-session";
 import { pct, ROTULO_STATUS_LOTE } from "@/lib/rotulos";
 import { Icone } from "@/components/ledger-icons";
+import { CENARIO_VENDA_INTERNA_V1 } from "@auditor/tax-pack";
 
 export default async function Lotes() {
   const s = await sessaoOuLogin();
-  const lotes = await getDb().withTenant(s.escritorioId, (c) => repos.listarLotes(c));
+  const { lotes, revisao } = await getDb().withTenant(s.escritorioId, async (c) => ({
+    lotes: await repos.listarLotes(c),
+    revisao: await repos.ultimaRevisaoCenario(c, CENARIO_VENDA_INTERNA_V1.versao),
+  }));
   const total = lotes.reduce((n, l) => n + l.total, 0);
   const emRevisao = lotes.reduce((n, l) => n + l.emRevisao, 0);
   const cobraveis = lotes.reduce((n, l) => n + l.cobraveis, 0);
@@ -18,6 +22,14 @@ export default async function Lotes() {
         <div className="stack"><h1 className="page-title" tabIndex={-1}>Lotes</h1><p className="meta">Cadastros enviados pelo escritório</p></div>
         <div className="row"><Link href="/app/lotes/novo" className="btn">Novo lote</Link></div>
       </div>
+      {!revisao && (
+        <div className="block" role="note" style={{ marginBottom: 24, borderColor: "var(--orange-ink)" }}>
+          <div className="block__body row" style={{ justifyContent: "space-between", flexWrap: "wrap" }}>
+            <span className="row"><Icone nome="warning" />O cenário {CENARIO_VENDA_INTERNA_V1.versao} ainda não foi revisado pelo contador responsável.</span>
+            <Link className="link" href="/app/cenario">Revisar cenário <Icone nome="arrow-right" tamanho={16} /></Link>
+          </div>
+        </div>
+      )}
       {lotes.length === 0 ? (
         <div className="empty">
           <Icone nome="upload" tamanho={32} />
