@@ -15,12 +15,14 @@ export SESSION_SECRET="e2e-segredo-de-sessao-com-mais-de-32-chars"
 export CLASSIFIER_BACKEND=fake WORKER_POLL_MS=300 E2E_BASE_URL="http://localhost:3100"
 
 # Servidor de execução anterior na porta 3100 testaria o build velho: encerra e confirma.
-pkill -f "next start -p 3100" 2>/dev/null || true; sleep 1
+# (o Next renomeia o processo para "next-server", então procura pelo nome também)
+pkill -f "next start -p 3100" 2>/dev/null || true; pkill -f "next-server" 2>/dev/null || true; sleep 1
 if curl -s -o /dev/null "http://localhost:3100"; then echo "porta 3100 ocupada por outro processo" >&2; exit 1; fi
 [ -d apps/web/.next ] || (cd apps/web && npx next build >/dev/null)
-(cd apps/web && npx next start -p 3100 > /tmp/auditor-e2e-web.log 2>&1) & WEB=$!
-(cd apps/worker && node --experimental-strip-types --no-warnings src/main.ts > /tmp/auditor-e2e-worker.log 2>&1) & WRK=$!
-trap 'kill $WEB $WRK 2>/dev/null || true; pkill -f "next start -p 3100" 2>/dev/null || true' EXIT
+# Cada serviço no próprio grupo de processos, para a saída encerrar também os filhos.
+setsid bash -c 'cd apps/web && exec npx next start -p 3100' > /tmp/auditor-e2e-web.log 2>&1 & WEB=$!
+setsid bash -c 'cd apps/worker && exec node --experimental-strip-types --no-warnings src/main.ts' > /tmp/auditor-e2e-worker.log 2>&1 & WRK=$!
+trap 'kill -- -$WEB -$WRK 2>/dev/null || true' EXIT
 for _ in $(seq 1 60); do curl -sf "$E2E_BASE_URL" >/dev/null && break; sleep 1; done
 
 npx vitest run --config e2e/vitest.config.ts

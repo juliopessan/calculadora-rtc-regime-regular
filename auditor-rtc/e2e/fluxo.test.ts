@@ -48,6 +48,7 @@ describe("fluxo completo", () => {
 
     await page.goto(`${BASE}/app/lotes/novo`);
     await page.fill("#cliente", "Mercado Bom Preço");
+    await page.selectOption("#regime", "simples");
     await page.setInputFiles("#arquivo", FIXTURE);
     await page.click("button[type=submit]");
     await page.waitForURL(/\/app\/lotes\/[0-9a-f-]{36}$/);
@@ -67,6 +68,7 @@ describe("fluxo completo", () => {
     expect(corpo).toMatch(/Duplicados removidos\s*1/);
     expect(corpo).toContain("02013000"); // zero à esquerda recomposto
     expect(corpo).toMatch(/motor 1\.6\.1\/V\d+/);
+    expect(corpo).toContain("Simples Nacional");
     await shot("02-fila-de-revisao");
   });
 
@@ -103,7 +105,28 @@ describe("fluxo completo", () => {
     expect(corpo).toContain("Mercado Bom Preço");
     expect(corpo).toContain("Assinado por Carlos Contador");
     expect(corpo).not.toMatch(/Auditor RTC/i);
+    expect(corpo).toContain("Regime: Simples Nacional");
+    expect(await page.evaluate(() => getComputedStyle(document.body).fontFamily)).not.toMatch(/Archivo/);
+    expect(await page.locator("link[href*='fonts.googleapis']").count()).toBe(0);
     await shot("03-relatorio-white-label");
+  });
+
+  it("shows calibration samples from the human review", async () => {
+    await page.goto(`${BASE}/app/calibracao`);
+    expect(await page.textContent("main")).toContain("3 de 300");
+    await shot("04-calibracao");
+  });
+
+  it("lets the contador responsável sign the scenario review and clears the banner", async () => {
+    await page.goto(`${BASE}/app`);
+    expect(await page.textContent("main")).toContain("ainda não foi revisado");
+    await page.goto(`${BASE}/app/cenario`);
+    for (const r of await page.locator("input[type=radio][value=concordo]").all()) await r.check();
+    await page.getByRole("button", { name: "Assinar revisão" }).click();
+    await page.getByText("Assinado por Carlos Contador").waitFor();
+    await shot("05-cenario");
+    await page.goto(`${BASE}/app`);
+    expect(await page.textContent("main")).not.toContain("ainda não foi revisado");
   });
 
   it("exports the ERP CSV with the exact header", async () => {
@@ -112,6 +135,17 @@ describe("fluxo completo", () => {
     const csv = await res.text();
     expect(csv.replace(/^﻿/, "").split("\r\n")[0]).toBe("codigo;descricao;ncm;cst;cClassTrib;status;confianca;fundamento;motor_versao");
     expect(csv).toContain("CERTIFICADO_REVISADO");
+  });
+
+  it("keeps landing sections visible after client-side navigation", async () => {
+    await page.goto(`${BASE}/login`);
+    await page.getByRole("link", { name: "Auditor RTC, início" }).click();
+    await page.waitForURL(`${BASE}/`);
+    const h2 = page.locator("h2").first();
+    await h2.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(900);
+    const opacidade = await h2.evaluate((el) => Number(getComputedStyle(el.closest("[data-reveal]") ?? el).opacity));
+    expect(opacidade).toBe(1);
   });
 
   it("blocks /app without a session", async () => {
