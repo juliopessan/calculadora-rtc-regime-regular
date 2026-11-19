@@ -4,7 +4,7 @@ import { repos, type SkuRow } from "@auditor/db";
 import type { Candidato } from "@auditor/tax-pack";
 import { getDb } from "@/lib/db";
 import { sessaoOuLogin } from "@/lib/server-session";
-import { pct, ROTULO_STATUS_LOTE } from "@/lib/rotulos";
+import { pct, ROTULO_REGIME, ROTULO_STATUS_LOTE } from "@/lib/rotulos";
 import { FilaRevisao, type ItemFila } from "@/components/fila-revisao";
 import { AcoesLote } from "@/components/acoes-lote";
 import { SeloSku } from "@/components/selo";
@@ -43,7 +43,7 @@ export default async function LotePage({ params }: { params: Promise<{ id: strin
         <div className="stack">
           <h1 className="page-title" tabIndex={-1}>{lote.cliente}</h1>
           <p className="meta">
-            {ROTULO_STATUS_LOTE[lote.status]} · referência {lote.dataReferencia} · motor {lote.motorVersao ?? "—"} ·
+            {ROTULO_STATUS_LOTE[lote.status]} · {ROTULO_REGIME[lote.regime]} · referência {lote.dataReferencia} · motor {lote.motorVersao ?? "—"} ·
             {lote.threshold === null ? " sem limiar calibrado (tudo passa por revisão)" : ` limiar ${lote.threshold}`}
           </p>
         </div>

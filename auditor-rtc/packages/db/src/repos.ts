@@ -5,8 +5,11 @@ export type StatusLote = "NA_FILA" | "PROCESSANDO" | "EM_REVISAO" | "CONCLUIDO";
 export type StatusSku =
   | "NA_FILA" | "CERTIFICADO_AUTO" | "CERTIFICADO_REVISADO" | "EM_REVISAO" | "PENDENTE_CLIENTE" | "NAO_SUPORTADO" | "ERRO_TEMPORARIO";
 
+export type Regime = "regular" | "simples";
+
 export type Lote = {
   id: string;
+  regime: Regime;
   clienteId: string;
   cliente: string;
   status: StatusLote;
@@ -57,6 +60,7 @@ const LOTE_SELECT = `
 function toLote(r: Record<string, any>): Lote {
   return {
     id: r.id,
+    regime: r.regime,
     clienteId: r.cliente_id,
     cliente: r.cliente,
     status: r.status,
@@ -106,13 +110,13 @@ export async function obterOuCriarCliente(c: Client, nome: string): Promise<stri
 
 export async function criarLote(
   c: Client,
-  i: { cliente: string; dataReferencia: string; skus: { codigo: string; descricao: string; ncmBruto: string; gtin?: string }[]; duplicados?: number; threshold?: number | null },
+  i: { cliente: string; dataReferencia: string; skus: { codigo: string; descricao: string; ncmBruto: string; gtin?: string }[]; duplicados?: number; threshold?: number | null; regime?: Regime },
 ): Promise<Lote> {
   const clienteId = await obterOuCriarCliente(c, i.cliente);
   const r = await c.query<{ id: string }>(
-    `INSERT INTO lotes (escritorio_id, cliente_id, data_referencia, total, duplicados, threshold)
-     VALUES (tenant_atual(), $1, $2, $3, $4, $5) RETURNING id`,
-    [clienteId, i.dataReferencia, i.skus.length, i.duplicados ?? 0, i.threshold ?? null],
+    `INSERT INTO lotes (escritorio_id, cliente_id, data_referencia, total, duplicados, threshold, regime)
+     VALUES (tenant_atual(), $1, $2, $3, $4, $5, $6) RETURNING id`,
+    [clienteId, i.dataReferencia, i.skus.length, i.duplicados ?? 0, i.threshold ?? null, i.regime ?? "regular"],
   );
   const loteId = r.rows[0]!.id;
   await inserirSkus(c, loteId, i.skus);

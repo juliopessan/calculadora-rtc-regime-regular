@@ -1,4 +1,5 @@
 import type { DadosRelatorio } from "@/lib/relatorio";
+import { ROTULO_REGIME } from "@/lib/rotulos";
 
 /** Relatório entregue ao cliente final. Só a marca do escritório aparece. */
 export function RelatorioView({ dados }: { dados: DadosRelatorio }) {
@@ -16,7 +17,7 @@ export function RelatorioView({ dados }: { dados: DadosRelatorio }) {
       <section>
         <h1>Cliente: {l.cliente}</h1>
         <p className="rel-suave" style={{ margin: 0 }}>
-          Data de referência {l.dataReferencia} · Motor de cálculo versão {l.motorVersao ?? "—"}
+          Regime: {ROTULO_REGIME[l.regime] ?? "Regime regular"} · Data de referência {l.dataReferencia} · Motor de cálculo versão {l.motorVersao ?? "—"}
           {l.assinadoPor && <> · Assinado por {l.assinadoPor}</>}
           {l.concluidoEm && <> em {new Date(l.concluidoEm).toLocaleDateString("pt-BR")}</>}
         </p>

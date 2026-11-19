@@ -174,3 +174,32 @@ describe("POST /api/lotes/[id]/reprocessar", () => {
     expect((await db.withTenant(socioA.escritorioId, (c) => repos.obterLote(c, id)))!.status).toBe("NA_FILA");
   });
 });
+
+describe("regime do cliente", () => {
+  async function uploadRegime(regime: string | null) {
+    const form = new FormData();
+    form.set("cliente", `Regime ${regime}`);
+    form.set("dataReferencia", "2026-11-18");
+    if (regime !== null) form.set("regime", regime);
+    form.set("arquivo", new Blob([latin1("descricao;ncm\nArroz;10063021\n")], { type: "text/csv" }), "c.csv");
+    return criarLote(await req("/api/lotes", socioA, { method: "POST", body: form }));
+  }
+
+  it("stores regime=simples", async () => {
+    const r = await uploadRegime("simples");
+    expect(r.status).toBe(201);
+    const id = (await r.json()).id;
+    expect((await db.withTenant(socioA.escritorioId, (c) => repos.obterLote(c, id)))!.regime).toBe("simples");
+  });
+
+  it("defaults to regular", async () => {
+    const id = (await (await uploadRegime(null)).json()).id;
+    expect((await db.withTenant(socioA.escritorioId, (c) => repos.obterLote(c, id)))!.regime).toBe("regular");
+  });
+
+  it("rejects an unknown regime", async () => {
+    const r = await uploadRegime("lucro-presumido");
+    expect(r.status).toBe(422);
+    expect(await r.json()).toEqual({ erro: "Regime inválido" });
+  });
+});

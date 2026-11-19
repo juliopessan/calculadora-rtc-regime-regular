@@ -26,6 +26,14 @@ export default function NovoLote() {
         <div className="block__body">
           <form onSubmit={enviar} className="gstack" style={{ gap: 16 }} noValidate>
             <div className="field"><label htmlFor="cliente">Cliente</label><input className="input" id="cliente" name="cliente" required /></div>
+            <div className="field">
+              <label htmlFor="regime">Regime do cliente</label>
+              <select className="select input" id="regime" name="regime" defaultValue="regular">
+                <option value="regular">Regime regular</option>
+                <option value="simples">Simples Nacional</option>
+              </select>
+              <p className="hint">Fica registrado no lote e no relatório. A classificação do produto é a mesma nos dois regimes.</p>
+            </div>
             <div className="field"><label htmlFor="dataReferencia">Data de referência</label><input className="input" id="dataReferencia" name="dataReferencia" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required /></div>
             <div className="field"><label htmlFor="arquivo">Arquivo do cadastro (CSV, até 10 MB)</label><input className="input" id="arquivo" name="arquivo" type="file" accept=".csv,text/csv" required /><p className="hint">Aceita ";" ou "," e acentos (UTF-8 ou Latin-1).</p></div>
             {erro && <p className="field-error" role="alert" style={{ display: "flex" }}><Icone nome="error" tamanho={16} /><span>{erro}</span></p>}
